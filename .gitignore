@@ -1,0 +1,6 @@
+*.csv
+*.html
+*.ipynb
+*.pyc
+
+config.py
