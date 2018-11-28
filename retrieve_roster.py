@@ -37,13 +37,13 @@ def main():
             players.append({
                 'team_id': team_id,
                 'yahoo_id': player.findtext("f:player_id", namespaces=ns),
-                'name': player.findtext("f:name/f:full", namespaces=ns).strip('.')
+                'name': player.findtext("f:name/f:full", namespaces=ns).replace('.', '')
             })
 
     rosters = pandas.DataFrame(players)
 
     rosters.to_csv('rosters.csv'.format(today), encoding='utf8', index=False)
-    rosters.to_csv('rosters_{}.csv'.format(today), encoding='utf8', index=False)
+    rosters.to_csv('historical/rosters_{}.csv'.format(today), encoding='utf8', index=False)
 
 
 def get_yahoo_session():
