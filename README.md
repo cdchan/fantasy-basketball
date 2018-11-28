@@ -15,9 +15,12 @@ Rename `config_sample.py` to `config.py`.
 
 ### League settings
 
-This project assumes that weekly scoring starts on Mondays.
+Update `config.py` with the following league settings:
 
-1. Enter the Monday of the first week of the season in `config.py`
+1. Set the sport / season id in `YAHOO_SPORT_ID`
+1. Set the league id in `YAHOO_LEAGUE_ID`
+1. Enter the Monday of the first week of the season in `SEASON_START`
+    * I assume that weekly scoring starts on Mondays
 
 ## Run order
 

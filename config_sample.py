@@ -1,5 +1,5 @@
 """
-Config file
+Config file SAMPLE
 
 """
 
@@ -14,3 +14,10 @@ YAHOO_CLIENT_SECRET = ''
 
 # go through authorization flow to get refresh token
 yahoo_refresh_token = ''
+
+# ids for identify league for Yahoo API
+# SPORT_ID is the season of fantasy basketball (Yahoo refers to this as the game id)
+# find this through https://fantasysports.yahooapis.com/fantasy/v2/game/nba
+YAHOO_SPORT_ID = ''
+# LEAGUE_ID is the id for your league
+YAHOO_LEAGUE_ID = ''

@@ -12,7 +12,7 @@ from lxml import etree
 from rauth import OAuth2Service
 
 
-from config import YAHOO_CLIENT_ID, YAHOO_CLIENT_SECRET, yahoo_refresh_token
+from config import YAHOO_CLIENT_ID, YAHOO_CLIENT_SECRET, yahoo_refresh_token, YAHOO_SPORT_ID, YAHOO_LEAGUE_ID
 
 
 def main():
@@ -26,7 +26,8 @@ def main():
 
     players = []
 
-    url = "https://fantasysports.yahooapis.com/fantasy/v2/team/385.l.139091.t.{team_id}/roster;date={date}"
+    base_url = "https://fantasysports.yahooapis.com/fantasy/v2/team/{sport_id}.l.{league_id}".format(sport_id=YAHOO_SPORT_ID, league_id=YAHOO_LEAGUE_ID)
+    url = base_url + ".t.{team_id}/roster;date={date}"
 
     for team_id in range(1, 9):
         r = session.get(url.format(team_id=team_id, date=today))
