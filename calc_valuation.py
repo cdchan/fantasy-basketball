@@ -50,7 +50,25 @@ def load_projections():
 
     projections = projections.eval('fpoints = 1.0 * pts + 1.2 * treb + 1.5 * ast + 3.0 * blk + 3.0 * stl - 1.0 * to')
 
+    team_gtp = calc_team_games_to_play(projections)
+
+    projections = projections.merge(team_gtp, on='team', how='left')
+
     return projections
+
+
+def calc_team_games_to_play(projections):
+    """
+    Assume that each team has a player projected to play in every remaining game. Use that player's games to play as the team's.
+
+    """
+    team_gtp = projections.groupby('team', as_index=False).aggregate({
+        'gtp': 'max'
+    })
+
+    team_gtp.rename(columns={'gtp': 'team_gtp'}, inplace=True)
+
+    return team_gtp
 
 
 def load_schedule():
@@ -79,7 +97,7 @@ def add_weekly_valuation(valuation):
         valuation['W{} fpoints'.format(week_num)] = valuation['W{}'.format(week_num)] * valuation['fpoints']
         weekly_columns_base.append('W{}'.format(week_num))
 
-    valuation['ros gtp'] = valuation['gtp'] / valuation['gtp'].max() * valuation['ros']
+    valuation['ros gtp'] = valuation['gtp'] / valuation['team_gtp'] * valuation['ros']
 
     valuation['ros fpoints'] = valuation['ros gtp'] * valuation['fpoints']
 
