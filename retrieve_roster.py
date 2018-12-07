@@ -1,5 +1,5 @@
 """
-Use Yahoo API to get rosters for today
+Use Yahoo API to get rosters for Monday (whether today or the next closest Monday)
 
 """
 
@@ -16,7 +16,7 @@ from config import YAHOO_CLIENT_ID, YAHOO_CLIENT_SECRET, yahoo_refresh_token, YA
 
 
 def main():
-    today = "{:%Y-%m-%d}".format(datetime.datetime.today())
+    monday = "{:%Y-%m-%d}".format(find_closest_monday())
 
     session = get_yahoo_session()
 
@@ -30,7 +30,7 @@ def main():
     url = base_url + ".t.{team_id}/roster;date={date}"
 
     for team_id in range(1, 9):
-        r = session.get(url.format(team_id=team_id, date=today))
+        r = session.get(url.format(team_id=team_id, date=monday))
 
         root = etree.fromstring(r.content)
 
@@ -43,8 +43,8 @@ def main():
 
     rosters = pandas.DataFrame(players)
 
-    rosters.to_csv('rosters.csv'.format(today), encoding='utf8', index=False)
-    rosters.to_csv('historical/rosters_{}.csv'.format(today), encoding='utf8', index=False)
+    rosters.to_csv('rosters.csv', encoding='utf8', index=False)
+    rosters.to_csv('historical/rosters_{}.csv'.format(monday), encoding='utf8', index=False)
 
 
 def get_yahoo_session():
@@ -73,6 +73,21 @@ def get_yahoo_session():
     )
 
     return session
+
+
+def find_closest_monday():
+    """
+    Find the closest Monday for an accurate roster. Rosters are set at the beginning of each week.
+
+    """
+    today = datetime.datetime.today()
+
+    days_ahead = 7 - today.weekday()  # Monday = 0
+
+    if days_ahead == 7:
+        return today
+    else:
+        return today + datetime.timedelta(days_ahead)
 
 
 if __name__ == '__main__':
