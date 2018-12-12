@@ -21,3 +21,6 @@ yahoo_refresh_token = ''
 YAHOO_SPORT_ID = ''
 # LEAGUE_ID is the id for your league
 YAHOO_LEAGUE_ID = ''
+
+# Yahoo cookie to enable scraping of league data
+YAHOO_COOKIE_STRING = r''''''

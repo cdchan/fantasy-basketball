@@ -20,7 +20,8 @@ Update `config.py` with the following league settings:
 1. Set the sport / season id in `YAHOO_SPORT_ID`
 1. Set the league id in `YAHOO_LEAGUE_ID`
 1. Enter the Monday of the first week of the season in `SEASON_START`
-    * I assume that weekly scoring starts on Mondays
+    * these scripts assume that weekly scoring starts on Mondays
+1. (optional if scraping from Yahoo) Set a Yahoo cookie in `YAHOO_COOKIE_STRING`
 
 ## Run order
 
@@ -30,3 +31,8 @@ Update `config.py` with the following league settings:
     * Scrapes hashtagbasketball.com for the latest rest of season projections.
 1. `calc_valuation.py`
     * Assigns values to players based on projections and game schedule for the next few weeks and rest of season.
+
+### Additional data sources
+
+* `scrape_yahoo.py`
+    * Using a Yahoo cookie, scrape the Yahoo rest of season projections for all players currently on a roster.
