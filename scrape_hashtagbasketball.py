@@ -3,6 +3,7 @@ Scrape projections from Hashtag Basketball
 
 """
 
+import datefinder
 import lxml.html
 import pandas
 import requests
@@ -74,9 +75,9 @@ def extract_updated_at(root):
     """
     updated_at_html = root.cssselect('#form1 > section > div > div.heading-pricing > span > small')
 
-    date_substring = updated_at_html[0].text_content()[14:-18]  # strip off beginning and end that don't contain the date
+    possible_dates = datefinder.find_dates(updated_at_html[0].text_content().split('by')[0])  # the "by" is giving datefinder problems
 
-    updated_at_datetime = datetime.strptime(date_substring, '%d %B %Y')
+    updated_at_datetime = next(possible_dates)
 
     return updated_at_datetime
 
