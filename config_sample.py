@@ -7,6 +7,12 @@ import datetime
 
 # the Monday of the first week of the season
 SEASON_START = datetime.datetime(2018, 10, 15)
+# the last week of scoring
+LAST_WEEK = 24
+# how many players are activer per week
+TOP_N = 10
+# your team id
+MY_TEAM_ID = 1
 
 # Yahoo app client id and secret
 YAHOO_CLIENT_ID = ''
