@@ -43,8 +43,11 @@ def main():
 
     rosters = pandas.DataFrame(players)
 
-    rosters.to_csv('rosters.csv', encoding='utf8', index=False)
-    rosters.to_csv('historical/rosters_{}.csv'.format(monday), encoding='utf8', index=False)
+    if len(rosters) == 0:
+        raise Exception('Failed to retrieve roster')
+    else:
+        rosters.to_csv('rosters.csv', encoding='utf8', index=False)
+        rosters.to_csv('historical/rosters_{}.csv'.format(monday), encoding='utf8', index=False)
 
 
 def get_yahoo_session():

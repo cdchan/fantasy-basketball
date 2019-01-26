@@ -10,7 +10,7 @@ Rename `config_sample.py` to `config.py`.
 
 1. [Create a Yahoo app](https://developer.yahoo.com/apps/create/)
 1. Update `config.py`
-1. Go through authorization code flow to get access token
+1. Run `get_refresh_token.py` to go through authorization code flow to get access token
 1. Save refresh token in `config.py`
 
 ### League settings
