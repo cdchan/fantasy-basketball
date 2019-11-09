@@ -30,9 +30,9 @@ def main():
 
     url = yahoo.get_authorize_url(**params)
 
-    print "Go to url: {}".format(url)
+    print("Go to url: {}".format(url))
 
-    auth_code = raw_input("Please enter code: ")
+    auth_code = input("Please enter code: ")
 
     session = yahoo.get_auth_session(
         data={
@@ -40,10 +40,18 @@ def main():
             'redirect_uri': 'oob',
             'grant_type': 'authorization_code',
         },
-        decoder=json.loads
+        decoder=json_decoder
     )
 
-    print "Set refresh token in config.py: {}".format(session.access_token_response.json()['refresh_token'])
+    print("Set refresh token in config.py: {}".format(session.access_token_response.json()['refresh_token']))
+
+
+def json_decoder(content):
+    """
+    Decodes bytestrings, then loads JSON
+    """
+    str_content = content.decode('utf-8')
+    return json.loads(str_content)
 
 
 if __name__ == '__main__':

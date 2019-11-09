@@ -66,10 +66,10 @@ def calc_team_games_to_play(projections):
 
     """
     team_gtp = projections.groupby('team', as_index=False).aggregate({
-        'gtp': 'max'
+        'gp': 'max'
     })
 
-    team_gtp.rename(columns={'gtp': 'team_gtp'}, inplace=True)
+    team_gtp.rename(columns={'gp': 'team_gtp'}, inplace=True)
 
     return team_gtp
 
@@ -79,7 +79,7 @@ def load_schedule():
     Load rest of year schedule
 
     """
-    schedule = pandas.read_csv("schedule_2018.csv")
+    schedule = pandas.read_csv("schedule_{}.csv".format(SEASON_START.year))
 
     schedule['ros'] = 0
 
@@ -99,7 +99,7 @@ def add_weekly_valuation(valuation):
 
     # assume each player plays a projected % of games
     # apply that % to the remaining games on schedule
-    valuation['ros gtp'] = valuation['gtp'] / valuation['team_gtp'] * valuation['ros']
+    valuation['ros gtp'] = valuation['gp'] / valuation['team_gtp'] * valuation['ros']
 
     valuation['ros fpoints'] = valuation['ros gtp'] * valuation['fpoints']
 
@@ -124,7 +124,7 @@ def check_if_top_n(valuation):
         if any(valuation.iloc[i]['name'] == current_team['name']):
             consider = current_team
         else:
-            consider = current_team.append(valuation.iloc[i])
+            consider = current_team.copy().append(valuation.iloc[i])
 
         for week_num in range(NEXT_WEEK, LAST_WEEK + 1):
             consider.sort_values(['W{} fpoints'.format(week_num), 'fpoints'], ascending=False, inplace=True)
