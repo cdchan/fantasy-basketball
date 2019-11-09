@@ -22,6 +22,8 @@ Update `config.py` with the following league settings:
 1. Enter the Monday of the first week of the season in `SEASON_START`
     * these scripts assume that weekly scoring starts on Mondays
 1. (optional if scraping from Yahoo) Set a Yahoo cookie in `YAHOO_COOKIE_STRING`
+1. Update `schedule_{current year}.csv` with the correct schedule for the current season.
+    * update `calc_valuation.py` to use the right schedule.
 
 ## Run order
 

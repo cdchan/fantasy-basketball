@@ -21,7 +21,7 @@ def main():
 
     updated_at_string = "{:%Y-%m-%d}".format(extract_updated_at(root))
 
-    projections.to_csv("projections.csv".format(updated_at_string), encoding='utf8', index=False)
+    projections.to_csv("projections.csv", encoding='utf8', index=False)
     projections.to_csv("historical/projections_{}.csv".format(updated_at_string), encoding='utf8', index=False)
 
 
@@ -54,7 +54,7 @@ def extract_projections(root):
         player = {}
 
         for cell, col in zip(row.cssselect('td'), columns):
-            player[col] = cell.text_content().strip()
+            player[col] = cell.text_content().strip().split('\n')[0].strip()
 
         if player and player['r#'] != 'R#':  # strip out tables rows that are just column headers
             players.append(player)
@@ -75,7 +75,7 @@ def extract_updated_at(root):
     """
     updated_at_html = root.cssselect('#form1 > section > div > div.heading-pricing > span > small')
 
-    possible_dates = datefinder.find_dates(updated_at_html[0].text_content().split('by')[0])  # the "by" is giving datefinder problems
+    possible_dates = datefinder.find_dates(updated_at_html[0].text_content().split('by')[0].strip().replace('Last updated: ', ''))
 
     updated_at_datetime = next(possible_dates)
 
