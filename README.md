@@ -2,6 +2,15 @@
 
 Head to head points
 
+## Environment
+
+To use Docker:
+
+```sh
+docker-compose build
+docker-compose run fbball bash
+```
+
 ## Configuration
 
 Rename `config_sample.py` to `config.py`.
