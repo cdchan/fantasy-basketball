@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  fbball:
+    build: .
+    volumes:
+      - .:/app

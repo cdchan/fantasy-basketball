@@ -158,7 +158,7 @@ def output_csv(valuation):
         'pos',
         'team_id',
         'fpoints',
-        'gtp',
+        # 'gtp',
         'mpg',
     ]
 
@@ -181,7 +181,7 @@ def output_csv(valuation):
 
     valuation.sort_values(weekly_columns[0], ascending=False, inplace=True)
 
-    valuation.to_csv('valuation.csv', encoding='utf8', index=False, columns=csv_columns)
+    valuation[csv_columns].to_csv('valuation.csv', encoding='utf8', index=False)
 
 
 if __name__ == '__main__':
