@@ -1,5 +1,7 @@
 FROM python:3.8.1
 
-COPY ./requirements.txt .
+COPY . /app
 
-RUN pip install -r requirements.txt
+RUN pip install -r /app/requirements.txt
+
+WORKDIR /app
