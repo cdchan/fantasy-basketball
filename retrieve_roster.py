@@ -4,16 +4,13 @@ Use Yahoo API to get rosters for Monday (whether today or the next closest Monda
 """
 
 import datetime
-import json
 import pandas
-
 
 from lxml import etree
 from rauth import OAuth2Service
 
-
-from config import YAHOO_CLIENT_ID, YAHOO_CLIENT_SECRET, yahoo_refresh_token, YAHOO_SPORT_ID, YAHOO_LEAGUE_ID, N_TEAMS
-from get_refresh_token import json_decoder
+from config import YAHOO_SPORT_ID, YAHOO_LEAGUE_ID, N_TEAMS
+from yahoo_util import get_yahoo_session
 
 
 def main():
@@ -49,34 +46,6 @@ def main():
     else:
         rosters.to_csv('rosters.csv', encoding='utf8', index=False)
         rosters.to_csv('historical/rosters_{}.csv'.format(monday), encoding='utf8', index=False)
-
-
-def get_yahoo_session():
-    """
-    Set up OAuth to get an authorized session
-
-    This uses rauth but hope to change to requests_oauthlib if I can get that to work
-
-    """
-    yahoo = OAuth2Service(
-        client_id=YAHOO_CLIENT_ID,
-        client_secret=YAHOO_CLIENT_SECRET,
-        name='yahoo',
-        authorize_url='https://api.login.yahoo.com/oauth2/request_auth',
-        access_token_url='https://api.login.yahoo.com/oauth2/get_token',
-        base_url='https://api.login.yahoo.com/'
-    )
-
-    session = yahoo.get_auth_session(
-        data={
-            'refresh_token': yahoo_refresh_token,
-            'redirect_uri': 'oob',
-            'grant_type': 'refresh_token',
-        },
-        decoder=json_decoder
-    )
-
-    return session
 
 
 def find_closest_monday():
