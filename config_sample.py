@@ -30,5 +30,19 @@ YAHOO_SPORT_ID = ''
 # LEAGUE_ID is the id for your league
 YAHOO_LEAGUE_ID = ''
 
+# mapping between column number and the stat on Yahoo's player page
+# this varies by league settings
+# below is an example
+YAHOO_STATS_MAPPING = {
+    1: 'gtp',
+    2: 'pts',
+    3: 'treb',
+    4: 'ast',
+    5: 'blk',
+    6: 'stl',
+    7: 'to',
+    8: 'rank'
+}
+
 # Yahoo cookie to enable scraping of league data
 YAHOO_COOKIE_STRING = r''''''

@@ -1,5 +1,5 @@
 """
-Scrape projections from Yahoo (at the moment, just for players currently on a roster)
+Scrape player projections from Yahoo
 
 """
 
@@ -9,8 +9,7 @@ import pandas
 import requests
 import time
 
-
-from config import YAHOO_COOKIE_STRING, YAHOO_LEAGUE_ID
+from config import YAHOO_COOKIE_STRING, YAHOO_LEAGUE_ID, YAHOO_STATS_MAPPING
 
 
 def main():
@@ -39,25 +38,14 @@ def scrape_yahoo(session):
     get_next = True
 
     while get_next:
-        print count
+        print(count)
 
-        x = session.get("https://basketball.fantasysports.yahoo.com/nba/{league}/players?&sort=AR&sdir=1&status=T&pos=P&stat1=S_PSR&jsenabled=0&count={count}".format(league=YAHOO_LEAGUE_ID, count=count))
+        x = session.get("https://basketball.fantasysports.yahoo.com/nba/{league}/players?&sort=AR&sdir=1&status=ALL&pos=P&stat1=S_PSR&jsenabled=0&count={count}".format(league=YAHOO_LEAGUE_ID, count=count))
 
         root = lxml.html.fromstring(x.content)
 
         # take all the table rows that represent players
         player_table_rows = root.cssselect('div.players tbody tr')
-
-        # mapping between column number and the stat on Yahoo's page
-        stats_mapping = {
-            6: 'gtp',
-            11: 'pts',
-            12: 'treb',
-            13: 'ast',
-            14: 'blk',
-            15: 'stl',
-            16: 'to'
-        }
 
         # loop over the player table rows to extract the projections player by player
         # this is finicky and could break if Yahoo changes their formatting
@@ -68,7 +56,7 @@ def scrape_yahoo(session):
 
             player['yahoo_id'] = player_tr.cssselect('.ysf-player-name a')[0].get('href').split('/')[-1]
 
-            for index, stat in stats_mapping.iteritems():
+            for index, stat in YAHOO_STATS_MAPPING.items():
                 player[stat] = player_tr.cssselect('td')[index].text_content()
 
             players.append(player)

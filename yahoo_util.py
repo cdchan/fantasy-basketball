@@ -10,7 +10,7 @@ from rauth import OAuth2Service
 from config import YAHOO_CLIENT_ID, YAHOO_CLIENT_SECRET, yahoo_refresh_token
 
 
-ns = {'f': 'http://fantasysports.yahooapis.com/fantasy/v2/base.rng'}
+NS = {'f': 'http://fantasysports.yahooapis.com/fantasy/v2/base.rng'}
 
 
 def create_yahoo_service():
@@ -67,7 +67,7 @@ def get_sport_id():
 
     root = etree.fromstring(r.content)
 
-    game_id = root.xpath("//f:game_id", namespaces=ns)[0].text
+    game_id = root.xpath("//f:game_id", namespaces=NS)[0].text
 
     print(f"Yahoo game id = {game_id}")
 
