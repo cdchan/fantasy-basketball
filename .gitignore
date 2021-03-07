@@ -3,6 +3,7 @@
 *.ipynb
 *.pyc
 *.xml
+.env
 
 config.py
 data/
