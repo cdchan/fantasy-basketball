@@ -2,5 +2,7 @@
 *.html
 *.ipynb
 *.pyc
+*.xml
 
 config.py
+data/

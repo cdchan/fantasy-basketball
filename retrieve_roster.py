@@ -4,10 +4,9 @@ Use Yahoo API to get rosters for Monday (whether today or the next closest Monda
 """
 
 import datetime
-import pandas
 
+import pandas
 from lxml import etree
-from rauth import OAuth2Service
 
 from config import YAHOO_SPORT_ID, YAHOO_LEAGUE_ID, N_TEAMS
 from yahoo_util import get_yahoo_session

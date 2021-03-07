@@ -54,9 +54,24 @@ def extract_projections(root):
         player = {}
 
         for cell, col in zip(row.cssselect('td'), columns):
-            player[col] = cell.text_content().strip().split('\n')[0].strip()
+            contents = cell.text_content().strip().split('\n')
 
-        if player and player['r#'] != 'R#':  # strip out tables rows that are just column headers
+            player[col] = contents[0].strip()
+            
+            if player['r#'] == 'R#':
+                player = {}
+                break  # strip out tables rows that are just column headers
+
+            fraction_parts = contents[-1].strip().replace('(', '').replace(')', '').split('/')
+
+            if col == 'fg%':
+                player['fgm'] = fraction_parts[0]
+                player['fga'] = fraction_parts[1]
+            elif col == 'ft%':
+                player['ftm'] = fraction_parts[0]
+                player['fta'] = fraction_parts[1]
+
+        if player:
             players.append(player)
 
     projections = pandas.DataFrame(players)

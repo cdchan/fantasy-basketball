@@ -29,11 +29,9 @@ Update `config.py` with the following league settings:
 1. Set the sport / season id in `YAHOO_SPORT_ID`
     * `python yahoo.util.py` will print the sport / season id.
 1. Set the league id in `YAHOO_LEAGUE_ID`
-1. Enter the Monday of the first week of the season in `SEASON_START`
-    * these scripts assume that weekly scoring starts on Mondays
-1. (optional if scraping from Yahoo) Set a Yahoo cookie in `YAHOO_COOKIE_STRING`
-1. Update `schedule_{current year}.csv` with the correct schedule for the current season.
-    * update `calc_h2h_points.py` to use the right schedule.
+1. (optional if scraping from Yahoo)
+    * Set a Yahoo cookie in `YAHOO_COOKIE_STRING`
+    * Set the column number of stats in the player projections page in `YAHOO_STATS_MAPPING`
 
 ## Run order
 
@@ -42,12 +40,20 @@ Update `config.py` with the following league settings:
 1. `scrape_hashtagbasketball.py`
     * Scrapes hashtagbasketball.com for the latest rest of season projections.
 
-### (optional)
+### For head to head
 
-* `calc_h2h_points.py`
+1. If head to head, enter the Monday of the first week of the season in `SEASON_START`
+    * These scripts assume that weekly scoring starts on Mondays
+1. Update `schedule_{current year}.csv` with the correct schedule for the current season.
+    * Update `calc_h2h_points.py` to use the right schedule.
+1. `calc_h2h_points.py`
     * Assigns values to players for a head to head points league based on projections and game schedule for the next few weeks and rest of season.
 
-### Additional data sources
+### For roto
 
-* `scrape_yahoo.py`
+1. `scrape_yahoo.py`
     * Using a Yahoo cookie, scrape the Yahoo rest of season projections for all players currently on a roster.
+1. `retrieve_standings.py`
+    * Get current roto standings in league
+1. `calc_roto.py`
+    * Outputs player valuations and which players to acquire
