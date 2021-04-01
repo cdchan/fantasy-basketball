@@ -2,18 +2,22 @@
 Calculate roto league valuations for the rest of season
 
 """
+import itertools
+from collections import namedtuple
 
+import numpy
 import pandas
-
 from scipy.stats import linregress
 
-from calc_h2h_points import load_rosters, load_projections
-from config import MY_TEAM_ID, N_TEAMS
+from utils import load_projections, load_recent_playing_time, load_rosters
+from config import MY_TEAM_ID, N_TEAMS, ROSTER_SIZE, TOP_N
 
 
 COUNTING_STATS = ['3pm', 'pts', 'treb', 'ast', 'stl', 'blk', 'to']
 RATIO_STATS = ['fg%', 'ft%']
 RATIO_STATS_PARTS = ['fga', 'fgm', 'fta', 'ftm']
+
+IMPORTANT_CATS = ['treb', 'ast', 'stl', 'blk', 'to', 'fg%', 'ft%']
 
 
 def main():
@@ -25,7 +29,7 @@ def main():
 
     standings = load_standings()
     final_standings = calc_final_standings(standings, ros)
-    print(final_standings)
+    print(final_standings[['team_id'] + COUNTING_STATS + RATIO_STATS + RATIO_STATS_PARTS].to_string(index=False))
 
     final_rank = calc_rankings(final_standings)
     print(final_rank)
@@ -73,6 +77,13 @@ def combine_projections():
 
     ros_rate = ros_rate.merge(yahoo[['yahoo_id', 'gtp', 'rank']], how='left')
 
+    # override minutes per game projections with recent playing time
+    pt = load_recent_playing_time()
+    ros_rate = ros_rate.merge(pt, on='yahoo_id', how='left')
+    for stat in COUNTING_STATS + RATIO_STATS_PARTS:
+        ros_rate[stat] = ros_rate[stat] / ros_rate['mpg'] * ros_rate['mpg_recent'].where(ros_rate['gp_recent'] > 1, ros_rate['mpg'])
+    ros_rate['mpg'] = ros_rate['mpg_recent'].where(ros_rate['gp_recent'] > 1, ros_rate['mpg'])
+
     # override playing time projections with manual ones if necessary
     gtp_manual = pandas.read_csv('gtp_manual.csv')
     gtp_manual.drop('name', axis=1, inplace=True)
@@ -109,18 +120,24 @@ def calc_final_standings(standings, projections):
     """
     Given current standings and rest of season player projections, calculate the final standings
 
+    This uses a weighted average of the players on the roster.
+
     """
     ros_by_team = projections.groupby('team_id').sum().reset_index()
+    ros_games_left = projections.groupby('team_id')['gtp'].nlargest(TOP_N).groupby('team_id').mean().reset_index()
+    ros_games_left.rename(columns={'gtp': 'mean_gtp'}, inplace=True)
+
+    ros_by_team = ros_by_team.merge(ros_games_left)
 
     final_standings = pandas.DataFrame()
     final_standings['team_id'] = standings['team_id']
 
     for stat in COUNTING_STATS + RATIO_STATS_PARTS:
-        final_standings[stat] = standings[stat] + ros_by_team[stat]
+        final_standings[stat] = standings[stat] + (ros_by_team[stat] / ros_by_team['gtp'] * ROSTER_SIZE * ros_by_team['mean_gtp'])
     
     final_standings['fg%'] = final_standings['fgm'] / final_standings['fga']
     final_standings['ft%'] = final_standings['ftm'] / final_standings['fta']
-    
+
     return final_standings
 
 
@@ -178,25 +195,31 @@ def calc_rankings(standings):
     Based on the given standings, calculate the standing points (rankings)
 
     """
-    rankings = pandas.DataFrame({'team_id': standings['team_id'], 'total': 0})
-
-    for stat in COUNTING_STATS + RATIO_STATS:
-        if stat != 'to':  # for turnovers, fewer is better
-            ordered_stat = standings.sort_values(stat)[['team_id', stat]].copy()
-        else:
-            ordered_stat = standings.sort_values(stat, ascending=False)[['team_id', stat]].copy()
-        
-        ordered_stat[f"{stat}_ranking"] = list(range(1, N_TEAMS + 1))
-
-        ordered_stat.drop(stat, axis=1, inplace=True)
-
-        rankings = rankings.merge(ordered_stat, on='team_id')
-    
-        rankings['total'] += rankings[f"{stat}_ranking"]
+    rankings = standings.rank()
+    rankings['to'] = standings['to'].rank(ascending=False)
+    rankings.drop(['fga', 'fgm', 'fta', 'ftm'], axis=1, inplace=True)
+    rankings['total'] = rankings.sum(axis=1) - rankings['team_id']
     
     rankings.sort_values('total', ascending=False, inplace=True)
 
     return rankings
+
+
+def calc_buffer(standings):
+    """
+    For each category, what % ahead is my team ahead of the next team?
+
+    """
+    rankings = standings.rank()  # we don't want to reverse turnovers here
+
+    behind_values = numpy.sort(numpy.array(standings[IMPORTANT_CATS]), axis=0)[
+        (rankings[rankings['team_id'] == MY_TEAM_ID][IMPORTANT_CATS].values - 2).flatten().astype(int).tolist(),
+        tuple(range(7))
+    ]
+
+    my_values = standings[standings['team_id'] == MY_TEAM_ID][IMPORTANT_CATS].values
+
+    return numpy.min(1 - behind_values / my_values)
 
 
 def optimize_roster(projections, standings):
@@ -204,11 +227,29 @@ def optimize_roster(projections, standings):
     Swap every player on roster for another team's player and see if that improves the team rank
 
     """
+    # current roster's standings
+    final_standings = calc_final_standings(standings, projections)
+    final_ranks = calc_rankings(final_standings)
+    team_rank = final_ranks.loc[final_ranks['team_id'] == MY_TEAM_ID, 'total'].values[0]
+
     tryouts = []
 
-    for drop_player in projections[projections['team_id'] == MY_TEAM_ID].itertuples():
-        for add_player in projections[projections['team_id'] != 7].itertuples():
-            new_final_rank = swap_players(drop_player, add_player, projections, standings)
+    Player = namedtuple('Player', 'yahoo_id team_id rank')
+    empty_player = Player(yahoo_id=0, team_id=None, rank=None)
+
+    for drop_player in itertools.chain(projections[projections['team_id'] == MY_TEAM_ID].itertuples(), [empty_player]):
+        for add_player in itertools.chain(projections[projections['team_id'].isna()].itertuples(), [empty_player]):
+            new_final_ranks, new_final_standings = swap_players(drop_player, add_player, projections, standings)
+
+            new_team_rank = new_final_ranks.loc[new_final_ranks['team_id'] == MY_TEAM_ID, 'total'].values[0]
+
+            changes = (new_final_ranks[new_final_ranks['team_id'] == MY_TEAM_ID] - final_ranks[final_ranks['team_id'] == MY_TEAM_ID]).to_dict('records')[0]
+            change_string = ','.join([f"{k}:{v}" for k, v in changes.items() if v != 0])
+
+            if new_team_rank >= team_rank:
+                buffer = calc_buffer(new_final_standings)
+            else:
+                buffer = None
 
             tryouts.append({
                 'drop_player_id': drop_player.yahoo_id,
@@ -216,14 +257,16 @@ def optimize_roster(projections, standings):
                 'add_player_team_id': add_player.team_id,
                 'drop_player_rank': drop_player.rank,
                 'add_player_rank': add_player.rank,
-                'new_team_rank': new_final_rank.loc[new_final_rank['team_id'] == 7, 'total'].values[0],
+                'new_team_rank': new_team_rank,
+                'change': change_string,
+                'buffer': buffer,
             })
     
     id_mapping = pandas.read_csv('id_mapping.csv')
     tryouts = pandas.DataFrame(tryouts)
     tryouts = tryouts.merge(id_mapping.rename(columns={'yahoo_name': 'drop_name', 'yahoo_id': 'drop_player_id'})[['drop_player_id', 'drop_name']], on='drop_player_id', how='left')
     tryouts = tryouts.merge(id_mapping.rename(columns={'yahoo_name': 'add_name', 'yahoo_id': 'add_player_id'})[['add_player_id', 'add_name']], on='add_player_id', how='left')
-    tryouts.sort_values('new_team_rank', ascending=False, inplace=True)
+    tryouts.sort_values(['new_team_rank', 'buffer'], ascending=[False, False], inplace=True)
     tryouts.to_csv("tryouts.csv", encoding='utf8', index=False)
 
 
@@ -232,16 +275,28 @@ def swap_players(drop_player, add_player, projections, standings):
     Calculate team ranks based on swapping players between teams
 
     """
-    projections = projections.copy()
-
-    projections.loc[projections['yahoo_id'] == drop_player.yahoo_id, 'team_id'] = add_player.team_id
-    projections.loc[projections['yahoo_id'] == add_player.yahoo_id, 'team_id'] = MY_TEAM_ID
+    if add_player is not None:
+        projections.loc[projections['yahoo_id'] == add_player.yahoo_id, 'team_id'] = MY_TEAM_ID
+    
+        if drop_player is not None:
+            projections.loc[projections['yahoo_id'] == drop_player.yahoo_id, 'team_id'] = add_player.team_id
+    else:  # just dropping a player
+        projections.loc[projections['yahoo_id'] == drop_player.yahoo_id, 'team_id'] = None
 
     final_standings = calc_final_standings(standings, projections)
 
     final_rank = calc_rankings(final_standings)
 
-    return final_rank
+    # reverse the team changes
+    if add_player is not None:
+        projections.loc[projections['yahoo_id'] == add_player.yahoo_id, 'team_id'] = add_player.team_id
+    
+        if drop_player is not None:
+            projections.loc[projections['yahoo_id'] == drop_player.yahoo_id, 'team_id'] = MY_TEAM_ID
+    else:
+        projections.loc[projections['yahoo_id'] == drop_player.yahoo_id, 'team_id'] = MY_TEAM_ID
+
+    return final_rank, final_standings
 
 
 if __name__ == '__main__':
