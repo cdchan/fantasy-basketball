@@ -32,6 +32,18 @@ def load_projections():
     return projections
 
 
+def load_recent_playing_time():
+    pt = pandas.read_csv('yahoo_playing_time.csv', na_values=['-'])
+
+    components = pt['mpg'].str.split(':', n=2, expand=True)
+
+    pt['mpg_recent'] = components[[0]].astype(float).values + components[[1]].astype(float).values / 60
+
+    pt['gp_recent'] = pt['gtp']
+
+    return pt[['yahoo_id', 'gp_recent', 'mpg_recent']]
+
+
 def calc_team_games_to_play(projections):
     """
     Assume that each team has a player projected to play in every remaining game. Use that player's games to play as the team's.
