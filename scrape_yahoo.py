@@ -15,8 +15,8 @@ from config import YAHOO_COOKIE_STRING, YAHOO_LEAGUE_ID, YAHOO_STATS_TRANSLATION
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ros", action="store_true", help="only scrape recent playing time")
-    parser.add_argument("--l14pt", action="store_true", help="only scrape recent playing time")
+    parser.add_argument("--ros", action="store_true", help="only scrape rest of season projections")
+    parser.add_argument("--l14pt", action="store_true", help="only scrape recent stats in the past 14 days")
     args = parser.parse_args()
 
     today = datetime.datetime.today()
@@ -27,12 +27,14 @@ def main():
     })
 
     if not args.l14pt:
+        # PSR = rest of season projections
         projections = scrape_yahoo_player_list(yahoo_session, 'PSR')
 
         projections.to_csv("yahoo_projections.csv", encoding='utf8', index=False)
         projections.to_csv("historical/yahoo_projections_{:%Y-%m-%d}.csv".format(today), encoding='utf8', index=False)
 
     if not args.ros:
+        # AL14 = last 14 days
         playing_time = scrape_yahoo_player_list(yahoo_session, 'AL14')
 
         playing_time.to_csv("yahoo_playing_time.csv", encoding='utf8', index=False)
