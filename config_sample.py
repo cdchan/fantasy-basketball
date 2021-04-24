@@ -11,6 +11,8 @@ SEASON_START = datetime.datetime(2000, 1, 1)
 LAST_WEEK = 24
 # how many players are activer per week
 TOP_N = 10
+# total non-IL roster size
+ROSTER_SIZE = 13
 # your team id
 MY_TEAM_ID = 1
 # number of teams
@@ -30,18 +32,17 @@ YAHOO_SPORT_ID = ''
 # LEAGUE_ID is the id for your league
 YAHOO_LEAGUE_ID = ''
 
-# mapping between column number and the stat on Yahoo's player page
-# this varies by league settings
-# below is an example
-YAHOO_STATS_MAPPING = {
-    1: 'gtp',
-    2: 'pts',
-    3: 'treb',
-    4: 'ast',
-    5: 'blk',
-    6: 'stl',
-    7: 'to',
-    8: 'rank'
+# mapping between Yahoo stat name and our stat name
+YAHOO_STATS_TRANSLATION = {
+    'GP*': 'gtp',
+    'Current': 'rank',
+    'PTS': 'pts',
+    'REB': 'treb',
+    'AST': 'ast',
+    'ST': 'stl',
+    'BLK': 'blk',
+    'TO': 'to',
+    'MPG': 'mpg',
 }
 
 # Yahoo cookie to enable scraping of league data
